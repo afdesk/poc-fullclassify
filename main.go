@@ -23,6 +23,7 @@ func handleAllLicenses() {
 			continue
 		}
 		classificator.Classify(lic)
+		lic.Close()
 	}
 }
 
@@ -44,6 +45,7 @@ func handleFullClassify() {
 			continue
 		}
 		classificator.FullClassify(filepath, content)
+		lic.Close()
 	}
 
 }
