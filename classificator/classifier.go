@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"runtime"
 	"sync"
 
 	"github.com/go-enry/go-license-detector/v4/licensedb"
@@ -46,6 +47,8 @@ func Classify(r io.Reader) ([]types.LicenseFinding, error) {
 
 	// Use 'github.com/google/licenseclassifier' to find licenses
 	result, err := cf.MatchFrom(r)
+	runtime.GC()
+
 	if err != nil {
 		return nil, xerrors.Errorf("unable to match licenses: %w", err)
 	}
@@ -86,7 +89,13 @@ func FullClassify(filePath string, contents []byte) (types.LicenseFile, error) {
 func googleClassifierLicense(filePath string, contents []byte) types.LicenseFile {
 	var matchType types.LicenseType
 	var findings []types.LicenseFinding
-	matcher := cf.Match(cf.Normalize(contents))
+
+	normalizedContent := cf.Normalize(contents)
+	runtime.GC()
+
+	matcher := cf.Match(normalizedContent)
+	runtime.GC()
+
 	for _, m := range matcher.Matches {
 		switch m.MatchType {
 		case "Header":
@@ -117,6 +126,8 @@ func fallbackClassifyLicense(filePath string, contents []byte) types.LicenseFile
 	}
 
 	matcher := licensedb.InvestigateLicenseText(contents)
+	runtime.GC()
+
 	for l, confidence := range matcher {
 		licenseLink := fmt.Sprintf("https://spdx.org/licenses/%s.html", l)
 
